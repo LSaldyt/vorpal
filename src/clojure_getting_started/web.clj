@@ -13,7 +13,8 @@
 
 (defroutes app
   (GET "/" []
-       (splash))
+       (slurp (io/resource "idea.html")))
+       ;(splash))
   (ANY "*" []
        (route/not-found (slurp (io/resource "404.html")))))
 
