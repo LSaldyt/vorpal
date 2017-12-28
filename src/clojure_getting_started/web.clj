@@ -12,18 +12,6 @@
    :body "Hello from Heroku"})
 
 (defroutes app
-  (GET "/camel" {{input :input} :params}
-       {:status 200
-        :headers {"Content-Type" "text/plain"}
-        :body (kebab/->CamelCase input)})
-  (GET "/snake" {{input :input} :params}
-       {:status 200
-        :headers {"Content-Type" "text/plain"}
-        :body (kebab/->snake_case input)})
-  (GET "/kebab" {{input :input} :params}
-       {:status 200
-        :headers {"Content-Type" "text/plain"}
-        :body (kebab/->kebab-case input)})
   (GET "/" []
        (splash))
   (ANY "*" []
