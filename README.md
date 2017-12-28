@@ -1,37 +1,19 @@
 # vorpal
 
-Research assistance software to-be. Stay tuned ;).
+FIXME
 
-## Installation
+## Prerequisites
 
-Download from http://example.com/FIXME.
+You will need [Leiningen][] 2.0.0 or above installed.
 
-## Usage
+[leiningen]: https://github.com/technomancy/leiningen
 
-FIXME: explanation
+## Running
 
-$ lein run
+To start a web server for the application, run:
 
-$ java -jar vorpal-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
+    lein ring server
 
 ## License
 
 Copyright © 2017 FIXME
-
-Distributed under the GNU Public License v3 
