@@ -18,7 +18,7 @@
    :headers {"Content-Type" "text/html"}
    :body (concat (for [kind ["test"]]
                    (format "<a href=\"/%s?input=%s\">%s %s</a><br />"
-                           kind sample kind sample))
+                           kind "test" kind "test"))
                  ["<hr /><ul>"]
                  (for [s (db/query (env :database-url)
                                    ["select content from sayings"])]
