@@ -16,7 +16,8 @@
 (defn splash []
   {:status 200
    :headers {"Content-Type" "text/html"}
-   :body (concat (for [kind ["test"]]
+   :body (concat "<link rel=\"stylesheet\" href=\"style.css\">"
+           (for [kind ["test"]]
                    (format "<a href=\"/%s?input=%s\">%s %s</a><br />"
                            kind "test" kind "test"))
                  ["<hr /><ul>"]
