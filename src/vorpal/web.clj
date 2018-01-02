@@ -7,12 +7,13 @@
             [ring.adapter.jetty :as jetty]
             [environ.core :refer [env]]
             [clojure.java.jdbc :as db]
+            [vorpal.layout :as layout]
             ))
 
-;;(defn splash []
-;;  {:status 200
-;;   :headers {"Content-Type" "text/plain"}
-;;   :body "Hello from Heroku"})
+;; (defn splash []
+;;   {:status 200
+;;    :headers {"Content-Type" "text/plain"}
+;;    :body "Hello from Heroku"})
 
 ;; (defn splash []
 ;;   {:status 200
@@ -27,10 +28,25 @@
 ;;                    (format "<li>%s</li>" (:content s)))
 ;;                  ["</ul>"])})
 
-(defn splash []
-  {:status 200
-   :headers {"Content-Type" "text/html"}
-   :body (html [:span {:class "foo"} "bar"])})
+(defmacro page [id f]
+  `(defn ~id [& args#]
+     (layout/application (str '~id) (apply ~f args#))))
+   ; {:status 200
+   ;  :headers {"Content-Type" "text/html"}
+   ;  :body (apply ~f args#)}))
+
+(defmacro static-page [id body]
+  `(page ~id (fn [] (html ~body))))
+
+;; (page splash (fn [] (html [:span {:class "foo"} "bar"])))
+;; (static-page splash [:span {:class "foo"} "bar"])
+(static-page splash 
+  [:header 
+   {:class "central-header"
+    :id    "splash-header"}
+   [:div {:class "centered"}
+     [:h1 "Vorpal"] 
+     [:h4 "Organizing Innovation"]]])
 
 (defn record [input]
   (db/insert! (env :database-url "postgres://localhost:5432/test")
@@ -42,6 +58,7 @@
        (splash))
   (GET "/" []
        (splash))
+  (route/resources "/")
   (ANY "*" []
        (route/not-found (slurp (io/resource "404.html")))))
 
