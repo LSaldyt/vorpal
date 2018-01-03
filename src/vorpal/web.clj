@@ -31,7 +31,9 @@
         [:h1 "Vorpal"]
         [:h4 "Organizing Innovation"]]]
     [:form {:action "/signup"} 
-     [:input {:type "submit" :value "Sign Up"}]]])
+     [:input {:type "submit" :value "Sign Up"}]]
+    [:form {:action "/login"} 
+     [:input {:type "submit" :value "Login"}]]])
 
 (page signup "Vorpal" 
     [:form {:action "/get-started" :method "post"}
@@ -52,26 +54,30 @@
 ;; (def encrypted (password/encrypt "test"))
 ;; (password/check "test" encrypted) ;; => true
 
-(defn record [input]
+(defn add-user [id password address]
   (db/insert! (env :database-url "postgres://localhost:5432/test")
-              :sayings {:content input}))
-
-;;(defn show []
-  ;;(println (db/query (env :database-url "postgres://localhost:5432/test") ["select * from sayings"])))
+              :users {:id id :crypt (password/encrypt password) :address address}))
 
 (defn show []
-  (println (db/query (env :database-url "postgres://localhost:5432/test") ["select content from sayings"])))
+  (println (db/query (env :database-url "postgres://localhost:5432/test") ["select * from users"])))
+
+(defn show-address [id]
+  (println (db/query (env :database-url "postgres://localhost:5432/test") [(str "select address from users where id='" id "'")])))
 
 (defroutes app
-  (GET "/test" {{input :input} :params}
-       (record input)
-       (splash))
   (GET "/signup" []
        (signup))
-  (POST "/get-started" {params :params}
-       (println params)
+  (POST "/get-started" {{username :username pass :password address :address} :params}
+        (if (not (= () (show-address username)))
+          (add-user username (password/encrypt (first pass)) address))
+       ;;(println params)
+       (show-address "not-present")
+       ;;(add-user "test" "mctest" "@test")
        (show)
+       (show-address "test")
        "You have signed up!")
+  (GET "/login" []
+       (str "Login success"))
   (GET "/" []
        (splash))
   (route/resources "/")
