@@ -66,28 +66,30 @@
        [:input {:type "submit" :value "Submit"}]
        [:br]]])
 
-;; (def encrypted (password/encrypt "test"))
-;; (password/check "test" encrypted) ;; => true
-
 (def db-url "postgres://localhost:5432/test")
-(def db-spec (env :databse-url db-url))
+(def db-spec (env :database-url db-url))
 
 (defn add-user [id password address]
   (db/insert! db-spec
               :users {:id id :crypt (password/encrypt password) :address address}))
 
-(defn show []
-  (println (db/query db-spec ["select * from users"])))
-
-(defn show-address [id]
-  (println (db/query db-spec [(str "select address from users where id='" id "'")])))
-
 (defn get-crypt [id]
-  (db/query db-spec [(str "select crypt from users where id='" id "'")]))
+  (:crypt (first (db/query db-spec [(str "select crypt from users where id='" id "'")]))))
 
 (defn authenticated? [id pass]
-  (let [crypt (get-crypt id)]
-    (if (not crypt)
+  (let [crypt  (get-crypt id)
+        pcrypt (password/encrypt pass)]
+    (println "stored:")
+    (println (type crypt))
+    (println crypt)
+    (println "pass:")
+    (println pass)
+    (println pcrypt)
+    (println "checks:")
+    (println (password/check pass crypt))
+    (println (password/check crypt pass))
+    (println (= crypt pcrypt))
+    (if (nil? crypt)
         false
         (password/check pass crypt))))
 
@@ -96,12 +98,8 @@
        (signup))
   (POST "/get-started" {{username :username pass :password address :address} :params}
         (if (not (= () (show-address username)))
-          (add-user username (password/encrypt (first pass)) address))
-       ;;(println params)
-       (show-address "not-present")
-       ;;(add-user "test" "mctest" "@test")
-       (show)
-       (show-address "test")
+          (do 
+            (add-user username (password/encrypt (first pass)) address)))
        "You have signed up!")
   (GET "/login" []
        (login))
