@@ -7,8 +7,6 @@
             [ring.adapter.jetty :as jetty]
             [environ.core :refer [env]]
             [clojure.java.jdbc :as db]
-            [honeysql.core :as hsql]
-            [honeysql.helpers :refer :all :as helpers]
             [crypto.password.bcrypt :as password]
             [vorpal.layout :as layout]))
 
