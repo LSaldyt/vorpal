@@ -7,55 +7,73 @@
             [ring.adapter.jetty :as jetty]
             [environ.core :refer [env]]
             [clojure.java.jdbc :as db]
-            [vorpal.layout :as layout]
-            ))
+            [honeysql.core :as hsql]
+            [honeysql.helpers :refer :all :as helpers]
+            [crypto.password.bcrypt :as password]
+            [vorpal.layout :as layout]))
 
-;; (defn splash []
-;;   {:status 200
-;;    :headers {"Content-Type" "text/plain"}
-;;    :body "Hello from Heroku"})
 
-;; (defn splash []
-;;   {:status 200
-;;    :headers {"Content-Type" "text/html"}
-;;    :body (concat "<link rel=\"stylesheet\" href=\"style.css\">"
-;;            (for [kind ["test"]]
-;;                    (format "<a href=\"/%s?input=%s\">%s %s</a><br />"
-;;                            kind "test" kind "test"))
-;;                  ["<hr /><ul>"]
-;;                  (for [s (db/query (env :database-url)
-;;                                    ["select content from sayings"])]
-;;                    (format "<li>%s</li>" (:content s)))
-;;                  ["</ul>"])})
+;; Sample database query
+;; 
+;; (for [s (db/query (env :database-url)
+;;                   ["select content from sayings"])]
+;;   (format "<li>%s</li>" (:content s)))
 
-(defmacro page [id f]
+(defmacro root-page [id title f]
   `(defn ~id [& args#]
-     (layout/application (str '~id) (apply ~f args#))))
-   ; {:status 200
-   ;  :headers {"Content-Type" "text/html"}
-   ;  :body (apply ~f args#)}))
+     (layout/application ~title (apply ~f args#))))
 
-(defmacro static-page [id body]
-  `(page ~id (fn [] (html ~body))))
+(defmacro page [id title body]
+  `(root-page ~id ~title (fn [] (html ~body))))
 
-;; (page splash (fn [] (html [:span {:class "foo"} "bar"])))
-;; (static-page splash [:span {:class "foo"} "bar"])
-(static-page splash 
-  [:header 
-   {:class "central-header"
-    :id    "splash-header"}
-   [:div {:class "centered"}
-     [:h1 "Vorpal"] 
-     [:h4 "Organizing Innovation"]]])
+(page splash "Vorpal" 
+  [:div.main
+    [:header#splash-header.central-header
+      [:div.centered
+        [:h1 "Vorpal"]
+        [:h4 "Organizing Innovation"]]]
+    [:form {:action "/signup"} 
+     [:input {:type "submit" :value "Sign Up"}]]])
+
+(page signup "Vorpal" 
+    [:form {:action "/get-started" :method "post"}
+     [:fieldset
+      [:legend "Get started with vorpal:"]
+       [:br]
+       [:input {:type "text" :name "username" :placeholder "Username"}]
+       [:br]
+       [:input {:type "text" :name "password" :placeholder "Password"}]
+       [:br]
+       [:input {:type "text" :name "password" :placeholder "Password"}]
+       [:br]
+       [:input {:type "text" :name "address" :placeholder "Monero Address"}]
+       [:br]
+       [:input {:type "submit" :value "Submit"}]
+       [:br]]])
+
+;; (def encrypted (password/encrypt "test"))
+;; (password/check "test" encrypted) ;; => true
 
 (defn record [input]
   (db/insert! (env :database-url "postgres://localhost:5432/test")
               :sayings {:content input}))
 
+;;(defn show []
+  ;;(println (db/query (env :database-url "postgres://localhost:5432/test") ["select * from sayings"])))
+
+(defn show []
+  (println (db/query (env :database-url "postgres://localhost:5432/test") ["select content from sayings"])))
+
 (defroutes app
   (GET "/test" {{input :input} :params}
        (record input)
        (splash))
+  (GET "/signup" []
+       (signup))
+  (POST "/get-started" {params :params}
+       (println params)
+       (show)
+       "You have signed up!")
   (GET "/" []
        (splash))
   (route/resources "/")
