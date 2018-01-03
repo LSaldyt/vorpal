@@ -6,7 +6,6 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [compojure "1.4.0"]
                  [crypto-password "0.2.0"]
-                 [honeysql "0.9.0"]
                  [hiccup "1.0.5"]
                  [ring/ring-jetty-adapter "1.4.0"]
                  [environ "1.0.0"]

@@ -8,8 +8,8 @@
             [environ.core :refer [env]]
             [clojure.java.jdbc :as db]
             [crypto.password.bcrypt :as password]
-            [vorpal.layout :as layout]))
-
+            [vorpal.layout :as layout])
+  (:import  [stellar-sdk.org.stellar.sdk]))
 
 ;; Sample database query
 ;; 
@@ -17,28 +17,31 @@
 ;;                   ["select content from sayings"])]
 ;;   (format "<li>%s</li>" (:content s)))
 
-(defmacro root-page [id title f]
+(def +title+ "Vorpal")
+(def +subtitle+ "Organizing Innovation")
+
+(defmacro root-page [id f]
   `(defn ~id [& args#]
-     (layout/application ~title (apply ~f args#))))
+     (layout/application +title+ (apply ~f args#))))
 
-(defmacro page [id title body]
-  `(root-page ~id ~title (fn [] (html ~body))))
+(defmacro page [id body]
+  `(root-page ~id (fn [] (html ~body))))
 
-(page splash "Vorpal" 
+(page splash 
   [:div.main
     [:header#splash-header.central-header
       [:div.centered
-        [:h1 "Vorpal"]
-        [:h4 "Organizing Innovation"]]]
+        [:h1 +title+]
+        [:h4 +subtitle+]]]
     [:form {:action "/signup"} 
      [:input {:type "submit" :value "Sign Up"}]]
     [:form {:action "/login"} 
      [:input {:type "submit" :value "Login"}]]])
 
-(page signup "Vorpal" 
+(page signup 
     [:form {:action "/get-started" :method "post"}
      [:fieldset
-      [:legend "Get started with vorpal:"]
+      [:legend (str "Get started with " +title+ ":")]
        [:br]
        [:input {:type "text" :name "username" :placeholder "Username"}]
        [:br]
@@ -51,18 +54,42 @@
        [:input {:type "submit" :value "Submit"}]
        [:br]]])
 
+(page login 
+    [:form {:action "/user" :method "post"}
+     [:fieldset
+      [:legend (str "Log in to " +title+ ":")]
+       [:br]
+       [:input {:type "text" :name "username" :placeholder "Username"}]
+       [:br]
+       [:input {:type "text" :name "password" :placeholder "Password"}]
+       [:br]
+       [:input {:type "submit" :value "Submit"}]
+       [:br]]])
+
 ;; (def encrypted (password/encrypt "test"))
 ;; (password/check "test" encrypted) ;; => true
 
+(def db-url "postgres://localhost:5432/test")
+(def db-spec (env :databse-url db-url))
+
 (defn add-user [id password address]
-  (db/insert! (env :database-url "postgres://localhost:5432/test")
+  (db/insert! db-spec
               :users {:id id :crypt (password/encrypt password) :address address}))
 
 (defn show []
-  (println (db/query (env :database-url "postgres://localhost:5432/test") ["select * from users"])))
+  (println (db/query db-spec ["select * from users"])))
 
 (defn show-address [id]
-  (println (db/query (env :database-url "postgres://localhost:5432/test") [(str "select address from users where id='" id "'")])))
+  (println (db/query db-spec [(str "select address from users where id='" id "'")])))
+
+(defn get-crypt [id]
+  (db/query db-spec [(str "select crypt from users where id='" id "'")]))
+
+(defn authenticated? [id pass]
+  (let [crypt (get-crypt id)]
+    (if (not crypt)
+        false
+        (password/check pass crypt))))
 
 (defroutes app
   (GET "/signup" []
@@ -77,7 +104,11 @@
        (show-address "test")
        "You have signed up!")
   (GET "/login" []
-       (str "Login success"))
+       (login))
+  (POST "/user" {{username :username pass :password} :params}
+        (if (authenticated? username pass)
+           (str "Login success")
+           (str "Login failure")))
   (GET "/" []
        (splash))
   (route/resources "/")
