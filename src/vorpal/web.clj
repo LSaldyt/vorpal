@@ -73,22 +73,21 @@
   (db/insert! db-spec
               :users {:id id :crypt (password/encrypt password) :address address}))
 
+(defn get-address [id]
+  (db/query db-spec [(str "select address from users where id='" id "'")]))
+
 (defn get-crypt [id]
   (:crypt (first (db/query db-spec [(str "select crypt from users where id='" id "'")]))))
 
 (defn authenticated? [id pass]
-  (let [crypt  (get-crypt id)
-        pcrypt (password/encrypt pass)]
+  (let [crypt (get-crypt id)]
     (println "stored:")
     (println (type crypt))
     (println crypt)
     (println "pass:")
     (println pass)
-    (println pcrypt)
     (println "checks:")
     (println (password/check pass crypt))
-    (println (password/check crypt pass))
-    (println (= crypt pcrypt))
     (if (nil? crypt)
         false
         (password/check pass crypt))))
@@ -97,10 +96,11 @@
   (GET "/signup" []
        (signup))
   (POST "/get-started" {{username :username pass :password address :address} :params}
-        (if (not (= () (show-address username)))
-          (do 
-            (add-user username (password/encrypt (first pass)) address)))
-       "You have signed up!")
+        (do
+          (println (get-address username))
+          (if (not (get-address username))
+            (add-user username (first pass) address))
+         "You have signed up!"))
   (GET "/login" []
        (login))
   (POST "/user" {{username :username pass :password} :params}
