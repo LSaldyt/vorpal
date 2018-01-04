@@ -97,8 +97,7 @@
        (signup))
   (POST "/get-started" {{username :username pass :password address :address} :params}
         (do
-          (println (get-address username))
-          (if (not (get-address username))
+          (if (= () (get-address username))
             (add-user username (first pass) address))
          "You have signed up!"))
   (GET "/login" []
